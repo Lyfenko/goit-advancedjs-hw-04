@@ -1,25 +1,93 @@
-/**
-  |============================
-  | include css partials with
-  | default @import url()
-  |============================
-*/
-@import url('./reset.css');
-@import url('./vite-promo.css');
-@import url('./header.css');
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
 
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
+.container {
+    width: 80%;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
 
-  color: #242424;
-  background-color: rgba(255, 255, 255, 0.87);
+.search-form {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
+.search-form input {
+    width: 300px;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px 0 0 4px;
+    outline: none;
+}
+
+.search-form button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-left: none;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 0 4px 4px 0;
+    transition: background-color 0.3s ease;
+}
+
+.search-form button:hover {
+    background-color: #0056b3;
+}
+
+.gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.photo-card {
+    width: calc(25% - 20px); /* Adjust width to ensure four cards per row with gaps */
+    text-align: left;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.photo-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.photo-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.info {
+    padding: 15px;
+    background-color: #f9f9f9;
+}
+
+.info-item {
+    margin: 10px 0;
+    color: #333;
+}
+
+.info-item b {
+    color: #007bff;
 }
