@@ -6,12 +6,17 @@ import 'izitoast/dist/css/iziToast.min.css';
 
 const form = document.getElementById('search-form');
 const gallery = document.querySelector('.gallery');
+const observerOptions = {
+    rootMargin: '200px'
+};
 
 let searchQuery = '';
 let page = 1;
 const perPage = 40;
 const API_KEY = '44418416-01658c71a65aed4380a3ece44';
 const BASE_URL = 'https://pixabay.com/api/';
+
+let lightbox; // Global instance for SimpleLightbox
 
 const fetchImages = async (query, page) => {
     try {
@@ -28,7 +33,8 @@ const fetchImages = async (query, page) => {
         });
         return response.data;
     } catch (error) {
-        console.error(error);
+        console.error('Error fetching images:', error);
+        throw error;
     }
 };
 
@@ -45,52 +51,74 @@ const renderImages = images => {
         </a>
     `).join('');
     gallery.insertAdjacentHTML('beforeend', markup);
-    new SimpleLightbox('.gallery a', { captionDelay: 250 }).refresh();
+
+    // Initialize SimpleLightbox only once
+    if (!lightbox) {
+        lightbox = new SimpleLightbox('.gallery a', { captionDelay: 250 });
+    } else {
+        lightbox.refresh();
+    }
 };
 
 const clearGallery = () => {
     gallery.innerHTML = '';
 };
 
-const smoothScroll = () => {
-    const { height: cardHeight } = document.querySelector('.gallery').firstElementChild.getBoundingClientRect();
-    window.scrollBy({
-        top: cardHeight * 2,
-        behavior: 'smooth'
-    });
-};
-
-const observer = new IntersectionObserver(async (entries, observer) => {
-    if (entries[0].isIntersecting) {
-        page += 1;
-        const data = await fetchImages(searchQuery, page);
-        renderImages(data.hits);
-        smoothScroll();
-        if (page * perPage >= data.totalHits) {
-            observer.disconnect();
-            iziToast.info({ title: 'Info', message: "We're sorry, but you've reached the end of search results." });
-        }
-    }
-}, { rootMargin: '200px' });
-
 const handleSearch = async event => {
     event.preventDefault();
     searchQuery = event.currentTarget.elements.searchQuery.value.trim();
-    if (!searchQuery) return;
+    if (!searchQuery) {
+        iziToast.error({ title: 'Error', message: 'Please enter a search query.' });
+        return;
+    }
     page = 1;
     clearGallery();
 
-    const data = await fetchImages(searchQuery, page);
-    if (data.hits.length === 0) {
-        iziToast.error({ title: 'Error', message: 'Sorry, there are no images matching your search query. Please try again.' });
-        return;
-    }
-    renderImages(data.hits);
-    iziToast.success({ title: 'Success', message: `Hooray! We found ${data.totalHits} images.` });
+    try {
+        const data = await fetchImages(searchQuery, page);
+        if (data.hits.length === 0) {
+            iziToast.error({ title: 'Error', message: `No images found for "${searchQuery}". Please try again.` });
+            return;
+        }
+        renderImages(data.hits);
+        iziToast.success({ title: 'Success', message: `Found ${data.totalHits} images for "${searchQuery}".` });
 
-    if (data.hits.length === perPage) {
-        observer.observe(document.querySelector('.gallery').lastElementChild);
+        if (data.hits.length === perPage) {
+            observeLastImageElement();
+        } else {
+            iziToast.info({ title: 'Info', message: 'End of images.' });
+        }
+    } catch (error) {
+        iziToast.error({ title: 'Error', message: 'Failed to fetch images. Please try again later.' });
+        console.error('Error fetching images:', error);
     }
 };
+
+const observeLastImageElement = () => {
+    const observer = new IntersectionObserver(async (entries, observer) => {
+        if (entries[0].isIntersecting) {
+            observer.unobserve(entries[0].target);
+
+            page += 1;
+            try {
+                const data = await fetchImages(searchQuery, page);
+                renderImages(data.hits);
+
+                if (page * perPage >= data.totalHits) {
+                    iziToast.info({ title: 'Info', message: "You've reached the end of search results." });
+                } else {
+                    observeLastImageElement();
+                }
+            } catch (error) {
+                iziToast.error({ title: 'Error', message: 'Failed to fetch more images. Please try again later.' });
+                console.error('Error fetching more images:', error);
+            }
+        }
+    }, observerOptions);
+
+    observer.observe(gallery.lastElementChild);
+};
+
+lightbox = new SimpleLightbox('.gallery a', { captionDelay: 250 });
 
 form.addEventListener('submit', handleSearch);
